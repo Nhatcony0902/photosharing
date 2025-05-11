@@ -1,47 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { List, ListItem, ListItemText, Divider } from "@mui/material";
 import { Link } from "react-router-dom";
-import fetchModel from "../../lib/fetchModelData";
 
-function UserList() {
+const UserList = () => {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
+  // Fetch user list from the backend API
   useEffect(() => {
-    async function fetchUsers() {
+    const fetchUsers = async () => {
       try {
-        const data = await fetchModel("/user/list");
-        if (data) {
+        const response = await fetch(
+          "https://hrcv5m-8081.csb.app/api/user/list"
+        );
+        if (response.ok) {
+          const data = await response.json();
           setUsers(data);
-          setLoading(false);
         } else {
-          throw new Error("Không nhận được dữ liệu");
+          console.error("Error fetching users:", await response.text());
         }
-      } catch (err) {
-        setError("Lỗi khi lấy danh sách người dùng");
-        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching users:", error);
       }
-    }
+    };
+
     fetchUsers();
   }, []);
 
-  if (loading) return <div>Đang tải...</div>;
-  if (error) return <div>{error}</div>;
-
   return (
     <div>
-      <h2>Danh sách người dùng</h2>
-      <ul>
-        {users.map((user) => (
-          <li key={user._id}>
-            <Link to={`/users/${user._id}`}>
-              {user.first_name} {user.last_name}
-            </Link>
-          </li>
+      <List component="nav">
+        {users.map((item) => (
+          <div key={item._id}>
+            <ListItem component={Link} to={`/users/${item._id}`}>
+              <ListItemText primary={`${item.last_name}`} />
+            </ListItem>
+            <Divider />
+          </div>
         ))}
-      </ul>
+      </List>
     </div>
   );
-}
+};
 
 export default UserList;
