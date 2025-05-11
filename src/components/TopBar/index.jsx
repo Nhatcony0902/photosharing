@@ -1,29 +1,33 @@
+import React, { useEffect, useState } from "react";
 import { AppBar, Toolbar, Typography, Box } from "@mui/material";
-import { useLocation, matchRoutes } from "react-router-dom";
-import { useEffect, useState } from "react";
-import fetchModel from "../../lib/fetchModelData";
+import { useLocation, useParams } from "react-router-dom";
 
 function TopBar() {
   const location = useLocation();
-  const [userName, setUserName] = useState("PhotoShare");
+  const { userId } = useParams();
+  const [userName, setUserName] = useState("");
 
-  const routes = [
-    { path: "/users/:userId" },
-    { path: "/photos/:userId" }
-  ];
-
-  const matched = matchRoutes(routes, location);
-  const userId = matched?.[0]?.params?.userId;
-
+  // Fetch user name from the backend API
   useEffect(() => {
     if (userId) {
-      fetchModel(`/user/${userId}`).then((data) => {
-        if (data) {
-          setUserName(`${data.first_name} ${data.last_name}`);
-        } else {
-          setUserName("PhotoShare");
+      const fetchUser = async () => {
+        try {
+          const response = await fetch(
+            `https://9fff95-8081.csb.app/api/user/${userId}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setUserName(`${data.last_name}`);
+          } else {
+            console.error("Error fetching user:", await response.text());
+            setUserName("Người dùng");
+          }
+        } catch (error) {
+          console.error("Error fetching user:", error);
+          setUserName("Người dùng");
         }
-      });
+      };
+      fetchUser();
     } else {
       setUserName("PhotoShare");
     }
@@ -31,10 +35,13 @@ function TopBar() {
 
   let contextText = "PhotoShare";
 
-  if (location.pathname.startsWith("/users/") && !location.pathname.includes("/photos")) {
-    contextText = `Thông tin người dùng ${userId}`;
+  if (
+    location.pathname.startsWith("/users/") &&
+    !location.pathname.includes("/photos")
+  ) {
+    contextText = `Thông tin người dùng ${userName || userId}`;
   } else if (location.pathname.includes("/photos")) {
-    contextText = `Ảnh của người dùng ${userId}`;
+    contextText = `Ảnh của người dùng ${userName || userId}`;
   } else if (location.pathname === "/users") {
     contextText = "Danh sách người dùng";
   }
