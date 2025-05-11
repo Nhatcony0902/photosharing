@@ -32,7 +32,7 @@ const App = () => {
                 <Route path="/" element={<Navigate to="/users" />} />
                 <Route path="/users" element={<UserList />} />
                 <Route path="/users/:userId" element={<UserDetail />} />
-                <Route path="/users/:userId/photos" element={<UserPhotos />} />
+                <Route path="/photos/:userId" element={<UserPhotos />} />
               </Routes>
             </Paper>
           </Grid>
@@ -41,5 +41,6 @@ const App = () => {
     </Router>
   );
 };
+
 
 export default App;

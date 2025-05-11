@@ -1,48 +1,47 @@
-import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom"; // Thêm Link từ react-router-dom
-import fetchModel from "../../lib/fetchModelData";
+import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { Typography } from "@mui/material";
 
 function UserDetail() {
   const { userId } = useParams();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
+  // Fetch user details from the backend API
   useEffect(() => {
-    async function fetchUser() {
+    const fetchUser = async () => {
       try {
-        const data = await fetchModel(`/user/${userId}`);
-         console.log(" data:", data);
-        if (data) {
+        const response = await fetch(`http://localhost:8081/api/user/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
           setUser(data);
-          setLoading(false);
         } else {
-          throw new Error("Không nhận được dữ liệu");
+          console.error('Error fetching user:', await response.text());
+          setUser(null);
         }
-      } catch (err) {
-        setError("Không tìm thấy người dùng hoặc ID không hợp lệ");
-        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        setUser(null);
       }
-    }
+    };
+
     fetchUser();
   }, [userId]);
 
-  if (loading) return <div>Đang tải...</div>;
-  if (error) return <div>{error}</div>;
-  if (!user) return <div>Không tìm thấy người dùng</div>;
-
   return (
     <div>
-      <h2>Chi tiết người dùng</h2>
-    
-      <p><strong>Tên:</strong> {user.last_name}</p>
-      <p><strong>Địa điểm:</strong> {user.location || "Chưa cung cấp"}</p>
-      <p><strong>Mô tả:</strong> {user.description || "Chưa cung cấp"}</p>
-      <p><strong>Nghề nghiệp:</strong> {user.occupation || "Chưa cung cấp"}</p>
-      <p>
-        <strong>Xem ảnh của người dùng:</strong>{" "}
-        <Link to={`/users/${userId}/photos`}>Xem bộ sưu tập ảnh</Link>
-      </p>
+      {user ? (
+        <>
+          <Typography variant="h5">User Details</Typography>
+          <Typography variant="body1">User ID: {user._id}</Typography>
+          <Typography variant="body1">Name: {user.first_name} {user.last_name}</Typography>
+          <Typography variant="body1">Location: {user.location}</Typography>
+          <Typography variant="body1">Description: {user.description}</Typography>
+          <Typography variant="body1">Occupation: {user.occupation}</Typography>
+          <Link to={`/photos/${user._id}`}>View Photos</Link>
+        </>
+      ) : (
+        <Typography variant="body1">User not found!</Typography>
+      )}
     </div>
   );
 }
