@@ -32,7 +32,7 @@ const App = () => {
                 <Route path="/" element={<Navigate to="/users" />} />
                 <Route path="/users" element={<UserList />} />
                 <Route path="/users/:userId" element={<UserDetail />} />
-                <Route path="/photos/:userId" element={<UserPhotos />} />
+                <Route path="/users/:userId/photos" element={<UserPhotos />} />
               </Routes>
             </Paper>
           </Grid>

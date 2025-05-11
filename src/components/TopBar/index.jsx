@@ -1,9 +1,11 @@
 import { AppBar, Toolbar, Typography, Box } from "@mui/material";
 import { useLocation, matchRoutes } from "react-router-dom";
-import models from '../../modelData/models';
+import { useEffect, useState } from "react";
+import fetchModel from "../../lib/fetchModelData";
 
 function TopBar() {
   const location = useLocation();
+  const [userName, setUserName] = useState("PhotoShare");
 
   const routes = [
     { path: "/users/:userId" },
@@ -13,8 +15,19 @@ function TopBar() {
   const matched = matchRoutes(routes, location);
   const userId = matched?.[0]?.params?.userId;
 
-  const user = userId ? models.userModel(userId) : null;
-  const userName = user ? `${user.first_name} ${user.last_name}` : "PhotoShare";
+  useEffect(() => {
+    if (userId) {
+      fetchModel(`/user/${userId}`).then((data) => {
+        if (data) {
+          setUserName(`${data.first_name} ${data.last_name}`);
+        } else {
+          setUserName("PhotoShare");
+        }
+      });
+    } else {
+      setUserName("PhotoShare");
+    }
+  }, [userId]);
 
   let contextText = "PhotoShare";
 

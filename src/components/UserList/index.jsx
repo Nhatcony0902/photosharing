@@ -1,30 +1,47 @@
-import React from 'react';
-import { List, ListItem, ListItemText, Divider, Typography } from '@mui/material';
-import { Link } from 'react-router-dom';
-import models from '../../modelData/models'; // Giả sử bạn có model dữ liệu ở đây
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import fetchModel from "../../lib/fetchModelData";
 
-const UserList = () => {
-  const users = models.userListModel(); // Lấy danh sách người dùng từ model
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const data = await fetchModel("/user/list");
+        if (data) {
+          setUsers(data);
+          setLoading(false);
+        } else {
+          throw new Error("Không nhận được dữ liệu");
+        }
+      } catch (err) {
+        setError("Lỗi khi lấy danh sách người dùng");
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, []);
+
+  if (loading) return <div>Đang tải...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div>
-      
-      
-      {/* Danh sách người dùng */}
-      <List component="nav">
-        {users.map((item) => (
-          <div key={item._id}>
-            <ListItem  component={Link} to={`/users/${item._id}`}>
-              <ListItemText primary={`${item.first_name} ${item.last_name}`} />
-            </ListItem>
-            <Divider />
-          </div>
+      <h2>Danh sách người dùng</h2>
+      <ul>
+        {users.map((user) => (
+          <li key={user._id}>
+            <Link to={`/users/${user._id}`}>
+              {user.first_name} {user.last_name}
+            </Link>
+          </li>
         ))}
-      </List>
-      
-      
+      </ul>
     </div>
   );
-};
+}
 
 export default UserList;
