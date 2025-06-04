@@ -1,56 +1,84 @@
-import React, { useEffect, useState } from "react";
-import { AppBar, Toolbar, Typography, Box } from "@mui/material";
-import { useLocation, useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { AppBar, Toolbar, Typography, Button, CircularProgress, Snackbar, Alert } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-function TopBar() {
-  const location = useLocation();
-  const { userId } = useParams();
-  const [userName, setUserName] = useState("");
+const TopBar = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const user = JSON.parse(localStorage.getItem('user'));
 
-  // Fetch user name from the backend API
-  useEffect(() => {
-    if (userId) {
-      const fetchUser = async () => {
-        try {
-          const response = await fetch(`http://localhost:8081/api/user/${userId}`);
-          if (response.ok) {
-            const data = await response.json();
-            setUserName(`${data.last_name}`);
-          } else {
-            console.error('Error fetching user:', await response.text());
-            setUserName("Người dùng");
-          }
-        } catch (error) {
-          console.error('Error fetching user:', error);
-          setUserName("Người dùng");
-        }
-      };
-      fetchUser();
-    } else {
-      setUserName("PhotoShare");
+  const handleLogout = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/admin/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        localStorage.removeItem('user');
+        navigate('/login');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Logout failed');
+      }
+    } catch (err) {
+      setError('Failed to logout. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  }, [userId]);
-
-  let contextText = "PhotoShare";
-
-  if (location.pathname.startsWith("/users/") && !location.pathname.includes("/photos")) {
-    contextText = `Thông tin người dùng ${userName || userId}`;
-  } else if (location.pathname.includes("/photos")) {
-    contextText = `Ảnh của người dùng ${userName || userId}`;
-  } else if (location.pathname === "/users") {
-    contextText = "Danh sách người dùng";
-  }
+  };
 
   return (
-    <AppBar position="absolute">
-      <Toolbar>
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h6">{userName}</Typography>
-        </Box>
-        <Typography variant="h6">{contextText}</Typography>
-      </Toolbar>
-    </AppBar>
+    <>
+      <AppBar className="topbar-appBar" position="absolute">
+        <Toolbar>
+          <Typography variant="h6" color="inherit" sx={{ flexGrow: 1 }}>
+            Photo Sharing App
+          </Typography>
+          {user ? (
+            <>
+              <Typography variant="body1" color="inherit" sx={{ mr: 2 }}>
+                Hi {user.first_name}
+              </Typography>
+              <Button 
+                color="inherit" 
+                onClick={handleLogout}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                    Logging out...
+                  </>
+                ) : (
+                  'Logout'
+                )}
+              </Button>
+            </>
+          ) : (
+            <Button 
+              color="inherit" 
+              onClick={() => navigate('/login')}
+              disabled={loading}
+            >
+              Please Login
+            </Button>
+          )}
+        </Toolbar>
+      </AppBar>
+      <Snackbar 
+        open={!!error} 
+        autoHideDuration={6000} 
+        onClose={() => setError('')}
+      >
+        <Alert severity="error" onClose={() => setError('')}>
+          {error}
+        </Alert>
+      </Snackbar>
+    </>
   );
-}
+};
 
 export default TopBar;
