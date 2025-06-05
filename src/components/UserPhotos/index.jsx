@@ -31,7 +31,7 @@ function UserPhotos() {
           }
         });
         if (!photoResponse.ok) {
-          if(photoResponse.status === 401 || photoResponse.status === 403){
+          if (photoResponse.status === 401 || photoResponse.status === 403) {
             nav("/login");
           }
           else {
@@ -42,6 +42,7 @@ function UserPhotos() {
         }
         const photos = await photoResponse.json();
         setPhotos(photos);
+        console.log(photos);
       } catch (error) {
         setMessage(error);
       }
@@ -56,8 +57,8 @@ function UserPhotos() {
             "Authorization": `Bearer ${token}`
           }
         });
-        if (!userResponse.ok){
-          if(userResponse.status === 401 || userResponse.status === 403){
+        if (!userResponse.ok) {
+          if (userResponse.status === 401 || userResponse.status === 403) {
             nav("/login");
           }
           else {
@@ -99,7 +100,7 @@ function UserPhotos() {
           }
         });
         if (!res.ok) {
-          if(res.status === 401 || res.status === 403){
+          if (res.status === 401 || res.status === 403) {
             nav("/login");
           }
         }
@@ -128,8 +129,8 @@ function UserPhotos() {
           user_id: user_id
         })
       });
-      if(!res.ok){
-        if(res.status === 401 || res.status === 403){
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
           nav("/login");
         }
         else {
@@ -145,7 +146,31 @@ function UserPhotos() {
       console.log(error);
     }
   }
-
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8081/api/photo/commentsOfPhoto/${id}`, {
+        method: "DELETE",
+      })
+      
+    } catch (error) {
+      console.log(error);
+    }
+    setTrigger((pre) => (!pre));
+  };
+  const handleEdit =async (id) =>{
+    const res=await fetch(`http://localhost:8081/api/photo/updatecommentsOfPhoto/${id}`,{
+      method:"POST",
+       headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          comment: content,
+          user_id: user_id
+        })
+    })
+    setTrigger((pre) => (!pre));
+  }
   return (
     <div className="photos-container">
       <h2 className="photos-title">Photos of User {user.last_name}</h2>
@@ -174,6 +199,21 @@ function UserPhotos() {
                     at {formatDate(comment.date_time)}:
                   </p>
                   <p className="photo-comment-text">{comment.comment}</p>
+                  <button onClick={() => handleDelete(comment._id)}>Xóa</button>
+                  <label className="comment-label">
+              
+                <input
+                  type="text"
+                  className="comment-input"
+                  onChange={(e) => setContent(e.target.value)}
+                />
+              </label>
+              <button
+                className="comment-button"
+                onClick={() => handleEdit(comment._id)}
+              >
+                Edit
+              </button>
                 </div>
               );
             })}

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { AppBar, Toolbar, Typography, Box } from "@mui/material";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import {useForm} from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 
-function LoginRegister({setTrigger}){
+function LoginRegister({ setTrigger }) {
     const [tab, setTab] = useState("login");
     const [password, setPassword] = useState("");
     const [login_name, setLogin_name] = useState("");
@@ -16,7 +16,7 @@ function LoginRegister({setTrigger}){
         formState: { errors: registerErrors },
         reset: resetRegister,
     } = useForm();
-
+    const token = localStorage.getItem("token");
     const loginHandle = async () => {
         try {
             const response = await fetch(`http://localhost:8081/api/admin/login`, {
@@ -29,12 +29,12 @@ function LoginRegister({setTrigger}){
                     password: password,
                 })
             })
-            if(!response.ok){
+            if (!response.ok) {
                 setMessage("Failed to login.");
                 return;
             }
             const data = await response.json();
-            if(data.token){
+            if (data.token) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user_id", data.id);
                 setTrigger((pre) => (!pre));
@@ -50,48 +50,49 @@ function LoginRegister({setTrigger}){
     }
 
     const onRegisterSubmit = async (data) => {
-    try {
-      const response = await fetch(`http://localhost:8081/api/user/user`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            login_name: data.login_name,
-            first_name: data.first_name,
-            last_name: data.last_name,
-            password: data.password,
-            repassword: data.repassword,
-            location: data.location,
-            occupation: data.occupation,
-            description: data.description
-        }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        setMessage(errorData.message);
-        return;
-      }
-      const responseData = await response.json();
-      setMessage(`Register Successfull! Login name: ${responseData.login_name}`);
-      localStorage.setItem("token", responseData.token);
-      localStorage.setItem("user_id", responseData.id);
-      resetRegister(); 
-    } catch (error) {
-      setMessage("Failed to register.");
-    }
-  };
+        try {
+            const response = await fetch(`http://localhost:8081/api/user/user`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    login_name: data.login_name,
+                    first_name: data.first_name,
+                    last_name: data.last_name,
+                    password: data.password,
+                    repassword: data.repassword,
+                    location: data.location,
+                    occupation: data.occupation,
+                    description: data.description
+                }),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                setMessage(errorData.message);
+                return;
+            }
+            const responseData = await response.json();
+            setMessage(`Register Successfull! Login name: ${responseData.login_name}`);
+            localStorage.setItem("token", responseData.token);
+            localStorage.setItem("user_id", responseData.id);
+            resetRegister();
+        } catch (error) {
+            setMessage("Failed to register.");
+        }
+    };
 
     return (
         <div className="login-register-container">
             {tab === "login" && (
                 <div className="login-form">
                     <p>
-                        Login_name: 
+                        Login_name:
                         <input type="text" className="login-input" onChange={(e) => setLogin_name(e.target.value)} />
                     </p>
                     <p>
-                        Password: 
+                        Password:
                         <input type="password" className="login-input" onChange={(e) => setPassword(e.target.value)} />
                     </p>
                     <button className="login-button" onClick={() => loginHandle()}>Login</button>
@@ -103,40 +104,40 @@ function LoginRegister({setTrigger}){
                 <div className="register-form">
                     <form onSubmit={handleRegisterSubmit(onRegisterSubmit)}>
                         <p>
-                            Login name: 
+                            Login name:
                             <input type="text" className="register-input" {...registerRegister("login_name", { required: "Login name is required." })} />
                             {registerErrors.login_name && <span className="error">{registerErrors.login_name.message}</span>}
                         </p>
                         <p>
-                            Password: 
+                            Password:
                             <input type="password" className="register-input" {...registerRegister("password", { required: "Password is required." })} />
                             {registerErrors.password && <span className="error">{registerErrors.password.message}</span>}
                         </p>
                         <p>
-                            Xác nhận password: 
+                            Xác nhận password:
                             <input type="password" className="register-input" {...registerRegister("repassword", { required: "Repassword is required." })} />
                             {registerErrors.repassword && <span className="error">{registerErrors.repassword.message}</span>}
                         </p>
                         <p>
-                            First name: 
+                            First name:
                             <input type="text" className="register-input" {...registerRegister("first_name", { required: "First name is required." })} />
                             {registerErrors.first_name && <span className="error">{registerErrors.first_name.message}</span>}
                         </p>
                         <p>
-                            Last name: 
+                            Last name:
                             <input type="text" className="register-input" {...registerRegister("last_name", { required: "Last name is required." })} />
                             {registerErrors.last_name && <span className="error">{registerErrors.last_name.message}</span>}
                         </p>
                         <p>
-                            Location: 
+                            Location:
                             <input type="text" className="register-input" {...registerRegister("location")} />
                         </p>
                         <p>
-                            Description: 
+                            Description:
                             <input type="text" className="register-input" {...registerRegister("description")} />
                         </p>
                         <p>
-                            Occupation: 
+                            Occupation:
                             <input type="text" className="register-input" {...registerRegister("occupation")} />
                         </p>
                         <p>

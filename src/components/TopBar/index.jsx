@@ -1,84 +1,119 @@
-import React, { useState } from "react";
-import { AppBar, Toolbar, Typography, Button, CircularProgress, Snackbar, Alert } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { AppBar, Toolbar, Typography, Box } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import './styles.css';
 
-const TopBar = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const user = JSON.parse(localStorage.getItem('user'));
+function TopBar() {
+  const token = localStorage.getItem("token");
+  const user_id = localStorage.getItem("user_id");
+  const [file, setFile] = useState(null);
+  const [message, setMessage] = useState('');
+  const [user, setUser] = useState();
+  const inputRef = useRef(null);
+  const nav = useNavigate();
 
-  const handleLogout = async () => {
-    setLoading(true);
-    setError('');
+  const addPhotoHandle = async () => {
+
+    const formData = new FormData();
+    formData.append('file', file);
+
     try {
-      const response = await fetch('/admin/logout', {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        localStorage.removeItem('user');
-        navigate('/login');
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Logout failed');
+      const res = await fetch("http://localhost:8081/api/photo/photos/new", {
+        method: "POST" ,
+        headers : {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
+      if(!res.ok){
+        if(res.status === 401 || res.status === 403){
+          nav("/login");
+        }
+        else {
+          const data = await res.json();
+          setMessage(data.message);
+          return;
+        }
       }
-    } catch (err) {
-      setError('Failed to logout. Please try again.');
-    } finally {
-      setLoading(false);
+      const data = await res.json();
+      setFile(null);
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+      nav(`/photos/${user_id}`)
+    } catch (error) {
+      console.log(error);
     }
-  };
+  }
 
-  return (
-    <>
-      <AppBar className="topbar-appBar" position="absolute">
-        <Toolbar>
-          <Typography variant="h6" color="inherit" sx={{ flexGrow: 1 }}>
-            Photo Sharing App
-          </Typography>
-          {user ? (
-            <>
-              <Typography variant="body1" color="inherit" sx={{ mr: 2 }}>
-                Hi {user.first_name}
-              </Typography>
-              <Button 
-                color="inherit" 
-                onClick={handleLogout}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                    Logging out...
-                  </>
-                ) : (
-                  'Logout'
-                )}
-              </Button>
-            </>
-          ) : (
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/login')}
-              disabled={loading}
-            >
+  useEffect(() => {
+      const fetchUser = async () => {
+      try {
+        const response = await fetch(`http://localhost:8081/api/user/${user_id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if(!response.ok){
+          return;
+        }
+        const data = await response.json();
+        setUser(data);
+        return;
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    fetchUser();
+  }, [user_id])
+
+
+ return (
+  <AppBar position="absolute" className="topbar-appbar">
+    <Toolbar className="topbar-toolbar">
+      {/* Trái: Username */}
+      <Box className="topbar-left">
+        <Typography variant="h6" className="topbar-username">
+          {token ? "Hello " + user?.first_name : "PhotoShare"}
+        </Typography>
+      </Box>
+
+      {/* Giữa: Add Photo */}
+      <Box className="topbar-center">
+        <div className="photo-upload">
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+            className="photo-upload-input"
+            ref={inputRef}
+          />
+          <button onClick={addPhotoHandle} className="photo-upload-button">
+            Add Photo
+          </button>
+          <p>{message}</p>
+        </div>
+      </Box> 
+
+      {/* Phải: Login / Logout */}
+      <Box className="topbar-right">
+        <Typography variant="h6" className="topbar-context">
+          {!token ? (
+            <Link to="/login" className="topbar-link">
               Please Login
-            </Button>
+            </Link>
+          ) : (
+            <Link to="/logout" className="topbar-link">
+              Logout
+            </Link>
           )}
-        </Toolbar>
-      </AppBar>
-      <Snackbar 
-        open={!!error} 
-        autoHideDuration={6000} 
-        onClose={() => setError('')}
-      >
-        <Alert severity="error" onClose={() => setError('')}>
-          {error}
-        </Alert>
-      </Snackbar>
-    </>
-  );
-};
+        </Typography>
+      </Box>
+    </Toolbar>
+  </AppBar>
+);
+
+}
 
 export default TopBar;
