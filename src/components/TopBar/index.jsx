@@ -81,7 +81,7 @@ function TopBar() {
       </Box>
 
       {/* Giữa: Add Photo */}
-      <Box className="topbar-center">
+      <Box className="topbar-center" >
         <div className="photo-upload">
           <input
             type="file"
@@ -89,12 +89,13 @@ function TopBar() {
             className="photo-upload-input"
             ref={inputRef}
           />
-          <button onClick={addPhotoHandle} className="photo-upload-button">
+          <button onClick={() =>addPhotoHandle()} >
             Add Photo
           </button>
           <p>{message}</p>
         </div>
       </Box> 
+    
 
       {/* Phải: Login / Logout */}
       <Box className="topbar-right">

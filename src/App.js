@@ -10,6 +10,7 @@ import UserList from "./components/UserList";
 import UserPhotos from "./components/UserPhotos";
 import LoginReigister from "./components/LoginRegister/index.jsx"
 import Logout from "./components/Logout/index.jsx";
+import BLogView from './components/BlogView/index.jsx';
 
 const App = () => {
   const [user_id, setUser_id] = useState();
@@ -47,6 +48,7 @@ const App = () => {
                 <Route path="/photos/:userId" element={<UserPhotos/>} />
                 <Route path='/login' element={<LoginReigister setTrigger={setTrigger}/>}/>
                 <Route path='/logout' element={<Logout setTrigger={setTrigger}/>}/>
+                <Route path='viewblog/:userId' element={<BLogView/>}/>
               </Routes>
             </Paper>
           </Grid>
